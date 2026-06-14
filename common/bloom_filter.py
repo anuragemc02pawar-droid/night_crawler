@@ -47,31 +47,3 @@ class DistributedBloomFilter:
         self.redis.delete(self.key)
         print("Bloom filter cleared")
 
-if __name__ == "__main__":
-    bf = DistributedBloomFilter()
-    
-    print("\nAdding URLs to bloom filter...")
-    urls_to_add = [
-        "https://arxiv.org/abs/1706.03762",
-        "https://arxiv.org/abs/2005.14165",
-        "https://arxiv.org/abs/1810.04805",
-    ]
-    
-    for url in urls_to_add:
-        bf.add(url)
-        print(f"Added: {url[-20:]}")
-    
-    print("\nChecking URLs...")
-    test_urls = [
-        "https://arxiv.org/abs/1706.03762",  # added — should return True
-        "https://arxiv.org/abs/2005.14165",  # added — should return True
-        "https://arxiv.org/abs/9999.99999",  # never added — should return False
-        "https://google.com",                # never added — should return False
-    ]
-    
-    for url in test_urls:
-        exists = bf.might_exist(url)
-        status = "SEEN BEFORE — skip" if exists else "NEW — scrape this"
-        print(f"{url[-20:]} → {status}")
-    
-    bf.clear()
