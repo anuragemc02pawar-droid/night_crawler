@@ -4,11 +4,13 @@ import threading
 import requests
 from flask import Flask, request, jsonify
 import os
+from flask_cors import CORS
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.consistent_hash import ConsistentHashRing
 
 app = Flask(__name__)
+CORS(app)
 
 ring = ConsistentHashRing()
 WORKER_PORTS = [5001, 5002, 5003, 5004]
@@ -72,4 +74,4 @@ if __name__ == "__main__":
     health_thread = threading.Thread(target=check_health, daemon=True)
     health_thread.start()
     print("Coordinator running on port 6000")
-    app.run(port=6000, debug=False)
+    app.run(port=6060, debug=False)

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NightCrawler Dashboard</title>
+    <style>
+        body { font-family: Arial; background: #1e1e1e; color: #eee; padding: 30px; }
+        h1 { color: #4caf50; }
+        input, button { padding: 10px; font-size: 16px; margin: 5px 0; }
+        input { width: 400px; }
+        button { background: #4caf50; color: white; border: none; cursor: pointer; }
+        .node { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .alive { background: #2e7d32; }
+        .dead { background: #c62828; }
+        .result { background: #2a2a2a; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>NightCrawler</h1>
+
+    <h3>Node Status</h3>
+    <div id="status"></div>
+
+    <h3>Crawl URLs (one per line)</h3>
+    <textarea id="urls" rows="5" style="width:500px;"></textarea><br>
+    <button onclick="crawl()">Crawl</button>
+
+    <h3>Results</h3>
+    <div id="results"></div>
+
+    <script>
+        async function loadStatus() {
+            const resp = await fetch('http://127.0.0.1:6060/status');
+            const data = await resp.json();
+            let html = '';
+            for (const [node, info] of Object.entries(data.all_nodes)) {
+                const cls = info.alive ? 'alive' : 'dead';
+                html += `<div class="node ${cls}">${node} (port ${info.port}) - ${info.alive ? 'ONLINE' : 'OFFLINE'}</div>`;
+            }
+            document.getElementById('status').innerHTML = html;
+        }
+
+        async function crawl() {
+            const urls = document.getElementById('urls').value.split('\n').map(u => u.trim()).filter(u => u);
+            document.getElementById('results').innerHTML = 'Crawling...';
+            const resp = await fetch('http://127.0.0.1:6060/crawl', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({urls: urls})
+            });
+            const data = await resp.json();
+            document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        loadStatus();
+        setInterval(loadStatus, 5000);
+    </script>
+</body>
+</html>

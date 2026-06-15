@@ -5,6 +5,7 @@ import requests
 from flask import Flask, request, jsonify
 from bs4 import BeautifulSoup
 import redis
+from flask_cors import CORS
 
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -28,12 +29,30 @@ def scrape():
         if bf.might_exist(url):
             continue
         try:
-            resp=requests.get(url,timeout=5)
-            soup=BeautifulSoup(resp.text,'html.parser')
-            title=soup.title.string if soup.title else "No title"
-            r.set(f"result:{url}",title)
+            resp = requests.get(url, timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
+            soup = BeautifulSoup(resp.text, 'html.parser')
+
+            title = soup.title.string.strip() if soup.title and soup.title.string else "No title"
+
+            meta_desc_tag = soup.find('meta', attrs={'name': 'description'})
+            meta_description = meta_desc_tag['content'].strip() if meta_desc_tag and meta_desc_tag.get('content') else ""
+
+            headings = [h.get_text(strip=True) for h in soup.find_all(['h1', 'h2']) if h.get_text(strip=True)][:5]
+
+            links = list({a['href'] for a in soup.find_all('a', href=True)})[:10]
+
+            page_data = {
+                "title": title,
+                "meta_description": meta_description,
+                "headings": headings,
+                "links": links,
+                "status_code": resp.status_code
+            }
+
+            import json
+            r.set(f"result:{url}", json.dumps(page_data))
             bf.add(url)
-            results.append({"url":url, "title":title})
+            results.append({"url": url, "data": page_data})
         except Exception as e:
             results.append({"url":url, "error":str(e)})
 
