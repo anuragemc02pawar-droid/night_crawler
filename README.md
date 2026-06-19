@@ -86,6 +86,6 @@ NightCrawler/
   README.md
 ```
 
-## Resume Line
+## Final Statements
 
 > Built a distributed crawling system using consistent hashing for URL distribution across worker nodes, distributed Bloom filters for deduplication, and automatic task redistribution on node failure via heartbeat protocol. Verified zero data loss during simulated node failures across 4 nodes.
